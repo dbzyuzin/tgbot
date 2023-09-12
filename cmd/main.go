@@ -1,30 +1,13 @@
 package main
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"log"
+	"tgbot"
 )
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI("525910060:AAG_h9JNfeiB_Po6gabjnmHBPkyBqeeAw78")
-	if err != nil {
-		log.Panic(err)
-	}
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	tgbot.RegisterHandler(func(msg tgbot.Message) {
+		tgbot.ReplyMessage(msg.ChatID, msg.ID, "🎲")
+	})
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates := bot.GetUpdatesChan(u)
-
-	for update := range updates {
-		if update.Message != nil { // If we got a message
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-			msg.ReplyToMessageID = update.Message.MessageID
-
-			bot.Send(msg)
-		}
-	}
+	tgbot.Start()
 }
