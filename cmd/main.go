@@ -1,7 +1,7 @@
 package main
 
 import (
-	"tgbot"
+	"github.com/dbzyuzin/tgbot"
 )
 
 func main() {

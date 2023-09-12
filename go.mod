@@ -1,4 +1,4 @@
-module tgbot
+module github.com/dbzyuzin/tgbot
 
 go 1.20
 
