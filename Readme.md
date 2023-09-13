@@ -5,7 +5,7 @@
 
 ### Как добавить библиотеку к себе
 ```shell
-go get 
+go get github.com/dbzyuzin/tgbot@latestSS
 ```
 
 ### Самой простой бот
@@ -13,12 +13,12 @@ go get
 package main
 
 import (
-	"tgbot"
+	"github.com/dbzyuzin/tgbot"
 )
 
 func main() {
 	tgbot.RegisterHandler(func(msg tgbot.Message) {
-		tgbot.ReplyMessage(msg.ChatID, msg.ID, "Привет!")
+		tgbot.SendMessage(msg.ChatID, msg.Text)
 	})
 
 	tgbot.Start()
