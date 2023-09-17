@@ -9,9 +9,28 @@ import (
 
 func SendMessage(chatID int64, text string) {
 	msg := tgbotapi.NewMessage(chatID, text)
-	//msg.ReplyToMessageID = update.Message.MessageID
 	_, err := bot.Send(msg)
 	if err != nil {
+		fmt.Println("Не удалось отправить сообщение в чат", chatID)
+	}
+}
+
+func SendMessageWithKeyboard(chatID int64, text string, buttons [][]Button) {
+	msg := tgbotapi.NewMessage(chatID, text)
+
+	markupTable := [][]tgbotapi.InlineKeyboardButton{}
+	for _, row := range buttons {
+		r := make([]tgbotapi.InlineKeyboardButton, 0, len(row))
+		for _, btn := range row {
+			r = append(r, tgbotapi.NewInlineKeyboardButtonData(btn.Text, btn.Data))
+		}
+		markupTable = append(markupTable, r)
+	}
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(markupTable...)
+
+	_, err := bot.Send(msg)
+	if err != nil {
+		fmt.Println(err)
 		fmt.Println("Не удалось отправить сообщение в чат", chatID)
 	}
 }

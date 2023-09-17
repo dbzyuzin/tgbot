@@ -1,5 +1,10 @@
 package tgbot
 
+type Callback struct {
+	Data    string
+	Message Message
+}
+
 type Message struct {
 	ID     int
 	User   User
@@ -12,4 +17,9 @@ type User struct {
 	FirstName string
 	LastName  string
 	UserName  string
+}
+
+type Button struct {
+	Text string
+	Data string
 }
