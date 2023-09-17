@@ -8,6 +8,7 @@ type Message struct {
 }
 
 type User struct {
+	ID        int64
 	FirstName string
 	LastName  string
 	UserName  string

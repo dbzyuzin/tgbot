@@ -28,6 +28,7 @@ func Start() {
 			handlers.newMessage(Message{
 				ID: update.Message.MessageID,
 				User: User{
+					ID:        update.Message.From.ID,
 					FirstName: update.Message.From.FirstName,
 					LastName:  update.Message.From.LastName,
 					UserName:  update.Message.From.UserName,
