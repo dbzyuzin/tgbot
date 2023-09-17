@@ -26,7 +26,9 @@ func SendMessageWithKeyboard(chatID int64, text string, buttons [][]Button) {
 		}
 		markupTable = append(markupTable, r)
 	}
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(markupTable...)
+	if len(buttons) != 0 && len(buttons[0]) != 0 {
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(markupTable...)
+	}
 
 	_, err := bot.Send(msg)
 	if err != nil {
