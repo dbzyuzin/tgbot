@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/dbzyuzin/tgbot"
 )
 
 func main() {
 	tgbot.RegisterHandler(func(msg tgbot.Message) {
 		tgbot.SendMessage(msg.ChatID, "🎲", []tgbot.Button{
-			{"Окей", "okay-data-id"},
-			{"Окей", "okay-data-id2"},
+			{Text: "Окей", Data: "okay-data-id"},
+			{Text: "Окей", Data: "okay-data-id2"},
 		})
 	})
 

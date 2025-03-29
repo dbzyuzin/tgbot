@@ -2,30 +2,68 @@ package tgbot
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
+	"net/http"
+	"os/signal"
+	"syscall"
+
 	"github.com/mymmrac/telego"
-	"log"
 )
+
+var allowedUpdates = []string{"message", "callback_query"}
 
 var bot *telego.Bot
 
 // Start запускает бота и замораживает поток до ручной остановки
 func Start() {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
 	var err error
 	bot, err = telego.NewBot(cfg.BotToken)
 	if err != nil {
 		myPanic(err.Error(), "Не удалось подключиться к телеграмм, проверь токен.")
 	}
 
-	updates, _ := bot.UpdatesViaLongPolling(context.Background(), nil)
-
-	me, err := bot.GetMe(context.Background())
+	me, err := bot.GetMe(ctx)
 	if err != nil {
-		myPanic(err.Error(), "Не удалось подключиться к телеграмм, проверь токен.")
+		myPanic(err.Error(), "can't get bot info")
 		return
 	}
 
-	log.Printf("bot \"%s\" started", me.Username)
+	var updates <-chan telego.Update
+
+	if cfg.AppURL != "" {
+		err = SetWebhook(ctx)
+		if err != nil && !errors.Is(err, ErrNoAppUrl) {
+			myPanic(err.Error(), "can't set webhook")
+			return
+		}
+		mux := http.NewServeMux()
+		updates, err = bot.UpdatesViaWebhook(ctx,
+			telego.WebhookHTTPServeMux(mux, webhookPath, bot.SecretToken()))
+		if err != nil {
+			myPanic(err.Error(), "can't start webhook updates")
+		}
+
+		go func() {
+			err = StartWebhookServer(ctx, mux)
+			if err != nil {
+				myPanic(err.Error(), "can't start webhook server")
+			}
+		}()
+	} else {
+		updates, err = bot.UpdatesViaLongPolling(ctx, &telego.GetUpdatesParams{
+			AllowedUpdates: allowedUpdates,
+		})
+		if err != nil {
+			myPanic(err.Error(), "can't start long polling updates")
+		}
+	}
+
+	slog.Info("bot started", "name", me.Username)
 
 	for update := range updates {
 		switch {

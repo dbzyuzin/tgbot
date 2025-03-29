@@ -1,23 +1,25 @@
 package tgbot
 
 import (
-	"os"
+	"log"
+	"strings"
+
+	"github.com/caarlos0/env/v10"
 )
 
-const (
-	tokenEnvName = "BOT_TOKEN"
-)
-
-var cfg struct {
-	BotToken string
+type config struct {
+	BotToken   string `env:"BOT_TOKEN,required"`
+	AppURL     string `env:"APP_URL"`
+	ServerPort int    `env:"SERVER_PORT"`
 }
 
-func init() {
-	cfg.BotToken = os.Getenv(tokenEnvName)
-	if cfg.BotToken == "" {
-		myPanic("empty tgbot token", "Токен для бота не установлен! Проверь имя токена, должно быть \"%s\"", tokenEnvName)
-	}
+var cfg config
 
+func init() {
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("Failed to parse environment variables: %v", err)
+	}
+	cfg.AppURL = strings.TrimSuffix(cfg.AppURL, "/")
 }
 
 var handlers struct {
