@@ -48,6 +48,10 @@ func Start() {
 			myPanic(err.Error(), "can't start webhook updates")
 		}
 
+		mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("OK"))
+		})
+
 		go func() {
 			err = StartWebhookServer(ctx, mux)
 			if err != nil {
