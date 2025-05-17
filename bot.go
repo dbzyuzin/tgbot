@@ -2,7 +2,8 @@ package tgbot
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
+
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 )
@@ -13,8 +14,7 @@ func SendMessage(chatID int64, text string, buttons ...[]Button) {
 
 	_, err := bot.SendMessage(context.Background(), msg)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Не удалось отправить сообщение в чат", chatID)
+		slog.Error("can't send the message", "chat", chatID, "err", err, "full_msg", msg)
 	}
 }
 
@@ -27,14 +27,14 @@ func ReplyMessage(chatID int64, msgID int, text string, buttons ...[]Button) {
 	}
 	_, err := bot.SendMessage(context.Background(), msg)
 	if err != nil {
-		fmt.Println("Не удалось отправить сообщение в чат", chatID)
+		slog.Error("can't send the message", "chat", chatID, "err", err, "full_msg", msg)
 	}
 }
 
 func DeleteMessage(chatID int64, messageID int) {
 	err := bot.DeleteMessage(context.Background(), tu.Delete(tu.ID(chatID), messageID))
 	if err != nil {
-		fmt.Printf("Не удалось удалить сообщение %d в чатe %d", messageID, chatID)
+		slog.Error("can't delete the message", "chat", chatID, "msg_id", messageID, "err", err)
 	}
 }
 
