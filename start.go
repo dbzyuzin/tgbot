@@ -59,6 +59,19 @@ func Start() {
 			}
 		}()
 	} else {
+		info, err := bot.GetWebhookInfo(ctx)
+		if err != nil {
+			myPanic(err.Error(), "can't delete webhook")
+		}
+
+		if info.URL != "" {
+			err = bot.DeleteWebhook(ctx, &telego.DeleteWebhookParams{})
+			if err != nil {
+				myPanic(err.Error(), "can't delete webhook")
+			}
+			slog.Info("webhook removed")
+		}
+
 		updates, err = bot.UpdatesViaLongPolling(ctx, &telego.GetUpdatesParams{
 			AllowedUpdates: allowedUpdates,
 		})
