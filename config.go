@@ -23,16 +23,16 @@ func init() {
 }
 
 var handlers struct {
-	newMessage  func(Message)
-	newCallback func(Callback)
+	messageHandlers  []func(Message)
+	callbackHandlers []func(Callback)
 }
 
 func RegisterHandler(handler any) {
 	switch fnc := handler.(type) {
 	case func(Message):
-		handlers.newMessage = fnc
+		handlers.messageHandlers = append(handlers.messageHandlers, fnc)
 	case func(Callback):
-		handlers.newCallback = fnc
+		handlers.callbackHandlers = append(handlers.callbackHandlers, fnc)
 	default:
 		myPanic("unknown handler type", "Передан не верный аргумент в функцию RegisterHandler."+
 			" Должна быть функция, принимающая обновление, например сообщение.")

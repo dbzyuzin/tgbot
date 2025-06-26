@@ -95,14 +95,18 @@ func Start() {
 }
 
 func handleMessage(update telego.Update) {
-	if handlers.newMessage == nil {
+	if len(handlers.messageHandlers) == 0 {
 		return
 	}
-	handlers.newMessage(mapMessage(update.Message))
+	
+	msg := mapMessage(update.Message)
+	for _, handler := range handlers.messageHandlers {
+		handler(msg)
+	}
 }
 
 func handleCallback(update telego.Update) {
-	if handlers.newCallback == nil {
+	if len(handlers.callbackHandlers) == 0 {
 		return
 	}
 
@@ -112,10 +116,14 @@ func handleCallback(update telego.Update) {
 		return
 	}
 
-	handlers.newCallback(Callback{
+	callback := Callback{
 		Data:    update.CallbackQuery.Data,
 		Message: mapMessage(msg),
-	})
+	}
+	
+	for _, handler := range handlers.callbackHandlers {
+		handler(callback)
+	}
 
 	_ = bot.AnswerCallbackQuery(context.Background(), &telego.AnswerCallbackQueryParams{
 		CallbackQueryID: update.CallbackQuery.ID,
