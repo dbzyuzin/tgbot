@@ -63,7 +63,7 @@ func ReplyMessageHTML(chatID int64, msgID int, htmlText string, buttons ...[]But
 	msg.ReplyParameters = &telego.ReplyParameters{
 		MessageID: msgID,
 	}
-	
+
 	_, err := bot.SendMessage(context.Background(), msg)
 	if err != nil {
 		slog.Error("can't reply with HTML message", "chat", chatID, "err", err, "full_msg", msg)
@@ -78,7 +78,7 @@ func ReplyMessageMarkdown(chatID int64, msgID int, markdownText string, buttons 
 	msg.ReplyParameters = &telego.ReplyParameters{
 		MessageID: msgID,
 	}
-	
+
 	_, err := bot.SendMessage(context.Background(), msg)
 	if err != nil {
 		slog.Error("can't reply with Markdown message", "chat", chatID, "err", err, "full_msg", msg)
@@ -144,7 +144,7 @@ func Link(text, url string) string {
 }
 
 func Spoiler(text string) string {
-	return "<spoiler>" + text + "</spoiler>"
+	return "<tg-spoiler>" + text + "</tg-spoiler>"
 }
 
 // Markdown форматирование - вспомогательные функции
