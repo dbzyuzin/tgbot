@@ -10,8 +10,10 @@ type Message struct {
 	User     User
 	ChatID   int64
 	Text     string
-	HTMLText string // Текст в HTML формате (если есть)
-	Entities []MessageEntity // Форматирование из Telegram
+	HTMLText string
+	Entities []MessageEntity
+
+	IsTextOnly bool
 }
 
 type MessageEntity struct {

@@ -98,7 +98,7 @@ func handleMessage(update telego.Update) {
 	if len(handlers.messageHandlers) == 0 {
 		return
 	}
-	
+
 	msg := mapMessage(update.Message)
 	for _, handler := range handlers.messageHandlers {
 		handler(msg)
@@ -120,7 +120,7 @@ func handleCallback(update telego.Update) {
 		Data:    update.CallbackQuery.Data,
 		Message: mapMessage(msg),
 	}
-	
+
 	for _, handler := range handlers.callbackHandlers {
 		handler(callback)
 	}
@@ -131,13 +131,11 @@ func handleCallback(update telego.Update) {
 }
 
 func mapMessage(msg *telego.Message) Message {
-	// Создаем HTML версию текста если есть entities
 	htmlText := msg.Text
 	if len(msg.Entities) > 0 {
 		htmlText = convertToHTML(msg.Text, msg.Entities)
 	}
 
-	// Маппим entities
 	var entities []MessageEntity
 	for _, entity := range msg.Entities {
 		entities = append(entities, MessageEntity{
@@ -155,6 +153,9 @@ func mapMessage(msg *telego.Message) Message {
 		Text:     msg.Text,
 		HTMLText: htmlText,
 		Entities: entities,
+		IsTextOnly: msg.Video == nil && msg.Photo == nil && msg.Audio == nil &&
+			msg.Document == nil && msg.Sticker == nil && msg.Voice == nil &&
+			msg.VideoNote == nil && msg.Animation == nil && msg.Contact == nil,
 	}
 }
 
