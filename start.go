@@ -131,12 +131,79 @@ func handleCallback(update telego.Update) {
 }
 
 func mapMessage(msg *telego.Message) Message {
-	return Message{
-		ID:     msg.MessageID,
-		User:   mapUser(msg.From),
-		ChatID: msg.Chat.ID,
-		Text:   msg.Text,
+	// Создаем HTML версию текста если есть entities
+	htmlText := msg.Text
+	if len(msg.Entities) > 0 {
+		htmlText = convertToHTML(msg.Text, msg.Entities)
 	}
+
+	// Маппим entities
+	var entities []MessageEntity
+	for _, entity := range msg.Entities {
+		entities = append(entities, MessageEntity{
+			Type:   entity.Type,
+			Offset: entity.Offset,
+			Length: entity.Length,
+			URL:    entity.URL,
+		})
+	}
+
+	return Message{
+		ID:       msg.MessageID,
+		User:     mapUser(msg.From),
+		ChatID:   msg.Chat.ID,
+		Text:     msg.Text,
+		HTMLText: htmlText,
+		Entities: entities,
+	}
+}
+
+// convertToHTML конвертирует текст с entities в HTML
+func convertToHTML(text string, entities []telego.MessageEntity) string {
+	if len(entities) == 0 {
+		return text
+	}
+
+	// Сортируем entities по offset в обратном порядке для правильной вставки тегов
+	runes := []rune(text)
+	result := make([]rune, len(runes))
+	copy(result, runes)
+
+	// Обрабатываем entities от конца к началу
+	for i := len(entities) - 1; i >= 0; i-- {
+		entity := entities[i]
+		start := entity.Offset
+		end := entity.Offset + entity.Length
+
+		if start >= 0 && end <= len(result) {
+			var openTag, closeTag string
+			switch entity.Type {
+			case "bold":
+				openTag, closeTag = "<b>", "</b>"
+			case "italic":
+				openTag, closeTag = "<i>", "</i>"
+			case "code":
+				openTag, closeTag = "<code>", "</code>"
+			case "pre":
+				openTag, closeTag = "<pre>", "</pre>"
+			case "text_link":
+				openTag = `<a href="` + entity.URL + `">`
+				closeTag = "</a>"
+			case "spoiler":
+				openTag, closeTag = "<spoiler>", "</spoiler>"
+			case "url":
+				openTag, closeTag = "", "" // URL уже видны как есть
+			default:
+				continue
+			}
+
+			// Вставляем теги
+			result = append(result[:end], append([]rune(closeTag), result[end:]...)...)
+			result = append(result[:start], append([]rune(openTag), result[start:]...)...)
+		}
+	}
+
+	return string(result)
 }
 
 func mapUser(user *telego.User) User {

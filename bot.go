@@ -18,6 +18,30 @@ func SendMessage(chatID int64, text string, buttons ...[]Button) {
 	}
 }
 
+// SendMessageHTML отправляет сообщение с HTML форматированием
+func SendMessageHTML(chatID int64, htmlText string, buttons ...[]Button) {
+	msg := tu.Message(tu.ID(chatID), htmlText)
+	msg.ParseMode = telego.ModeHTML
+	msg.ReplyMarkup = createInlineKeyboard(buttons)
+
+	_, err := bot.SendMessage(context.Background(), msg)
+	if err != nil {
+		slog.Error("can't send HTML message", "chat", chatID, "err", err, "full_msg", msg)
+	}
+}
+
+// SendMessageMarkdown отправляет сообщение с Markdown форматированием
+func SendMessageMarkdown(chatID int64, markdownText string, buttons ...[]Button) {
+	msg := tu.Message(tu.ID(chatID), markdownText)
+	msg.ParseMode = telego.ModeMarkdownV2
+	msg.ReplyMarkup = createInlineKeyboard(buttons)
+
+	_, err := bot.SendMessage(context.Background(), msg)
+	if err != nil {
+		slog.Error("can't send Markdown message", "chat", chatID, "err", err, "full_msg", msg)
+	}
+}
+
 func ReplyMessage(chatID int64, msgID int, text string, buttons ...[]Button) {
 	msg := tu.Message(tu.ID(chatID), text)
 	msg.ReplyMarkup = createInlineKeyboard(buttons)
@@ -28,6 +52,36 @@ func ReplyMessage(chatID int64, msgID int, text string, buttons ...[]Button) {
 	_, err := bot.SendMessage(context.Background(), msg)
 	if err != nil {
 		slog.Error("can't send the message", "chat", chatID, "err", err, "full_msg", msg)
+	}
+}
+
+// ReplyMessageHTML отвечает на сообщение с HTML форматированием
+func ReplyMessageHTML(chatID int64, msgID int, htmlText string, buttons ...[]Button) {
+	msg := tu.Message(tu.ID(chatID), htmlText)
+	msg.ParseMode = telego.ModeHTML
+	msg.ReplyMarkup = createInlineKeyboard(buttons)
+	msg.ReplyParameters = &telego.ReplyParameters{
+		MessageID: msgID,
+	}
+	
+	_, err := bot.SendMessage(context.Background(), msg)
+	if err != nil {
+		slog.Error("can't reply with HTML message", "chat", chatID, "err", err, "full_msg", msg)
+	}
+}
+
+// ReplyMessageMarkdown отвечает на сообщение с Markdown форматированием
+func ReplyMessageMarkdown(chatID int64, msgID int, markdownText string, buttons ...[]Button) {
+	msg := tu.Message(tu.ID(chatID), markdownText)
+	msg.ParseMode = telego.ModeMarkdownV2
+	msg.ReplyMarkup = createInlineKeyboard(buttons)
+	msg.ReplyParameters = &telego.ReplyParameters{
+		MessageID: msgID,
+	}
+	
+	_, err := bot.SendMessage(context.Background(), msg)
+	if err != nil {
+		slog.Error("can't reply with Markdown message", "chat", chatID, "err", err, "full_msg", msg)
 	}
 }
 
@@ -66,4 +120,54 @@ func createInlineKeyboard(buttons [][]Button) *telego.InlineKeyboardMarkup {
 	}
 
 	return nil
+}
+
+// HTML форматирование - вспомогательные функции
+func Bold(text string) string {
+	return "<b>" + text + "</b>"
+}
+
+func Italic(text string) string {
+	return "<i>" + text + "</i>"
+}
+
+func Code(text string) string {
+	return "<code>" + text + "</code>"
+}
+
+func Pre(text string) string {
+	return "<pre>" + text + "</pre>"
+}
+
+func Link(text, url string) string {
+	return `<a href="` + url + `">` + text + `</a>`
+}
+
+func Spoiler(text string) string {
+	return "<spoiler>" + text + "</spoiler>"
+}
+
+// Markdown форматирование - вспомогательные функции
+func BoldMD(text string) string {
+	return "*" + text + "*"
+}
+
+func ItalicMD(text string) string {
+	return "_" + text + "_"
+}
+
+func CodeMD(text string) string {
+	return "`" + text + "`"
+}
+
+func PreMD(text string) string {
+	return "```\n" + text + "\n```"
+}
+
+func LinkMD(text, url string) string {
+	return "[" + text + "](" + url + ")"
+}
+
+func SpoilerMD(text string) string {
+	return "||" + text + "||"
 }

@@ -6,10 +6,19 @@ type Callback struct {
 }
 
 type Message struct {
-	ID     int
-	User   User
-	ChatID int64
-	Text   string
+	ID       int
+	User     User
+	ChatID   int64
+	Text     string
+	HTMLText string // Текст в HTML формате (если есть)
+	Entities []MessageEntity // Форматирование из Telegram
+}
+
+type MessageEntity struct {
+	Type   string // "bold", "italic", "code", "pre", "text_link", etc.
+	Offset int    // Начальная позиция
+	Length int    // Длина
+	URL    string // Для text_link
 }
 
 type User struct {
