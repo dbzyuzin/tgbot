@@ -10,7 +10,11 @@ import (
 
 func SendMessage(chatID int64, text string, buttons ...[]Button) {
 	msg := tu.Message(tu.ID(chatID), text)
-	msg.ReplyMarkup = createInlineKeyboard(buttons)
+
+	keyboard := createInlineKeyboard(buttons)
+	if keyboard != nil {
+		msg.ReplyMarkup = createInlineKeyboard(buttons)
+	}
 
 	_, err := bot.SendMessage(context.Background(), msg)
 	if err != nil {
@@ -22,7 +26,10 @@ func SendMessage(chatID int64, text string, buttons ...[]Button) {
 func SendMessageHTML(chatID int64, htmlText string, buttons ...[]Button) {
 	msg := tu.Message(tu.ID(chatID), htmlText)
 	msg.ParseMode = telego.ModeHTML
-	msg.ReplyMarkup = createInlineKeyboard(buttons)
+	keyboard := createInlineKeyboard(buttons)
+	if keyboard != nil {
+		msg.ReplyMarkup = createInlineKeyboard(buttons)
+	}
 
 	_, err := bot.SendMessage(context.Background(), msg)
 	if err != nil {
@@ -34,7 +41,10 @@ func SendMessageHTML(chatID int64, htmlText string, buttons ...[]Button) {
 func SendMessageMarkdown(chatID int64, markdownText string, buttons ...[]Button) {
 	msg := tu.Message(tu.ID(chatID), markdownText)
 	msg.ParseMode = telego.ModeMarkdownV2
-	msg.ReplyMarkup = createInlineKeyboard(buttons)
+	keyboard := createInlineKeyboard(buttons)
+	if keyboard != nil {
+		msg.ReplyMarkup = createInlineKeyboard(buttons)
+	}
 
 	_, err := bot.SendMessage(context.Background(), msg)
 	if err != nil {
@@ -44,7 +54,10 @@ func SendMessageMarkdown(chatID int64, markdownText string, buttons ...[]Button)
 
 func ReplyMessage(chatID int64, msgID int, text string, buttons ...[]Button) {
 	msg := tu.Message(tu.ID(chatID), text)
-	msg.ReplyMarkup = createInlineKeyboard(buttons)
+	keyboard := createInlineKeyboard(buttons)
+	if keyboard != nil {
+		msg.ReplyMarkup = createInlineKeyboard(buttons)
+	}
 
 	msg.ReplyParameters = &telego.ReplyParameters{
 		MessageID: msgID,
@@ -59,7 +72,10 @@ func ReplyMessage(chatID int64, msgID int, text string, buttons ...[]Button) {
 func ReplyMessageHTML(chatID int64, msgID int, htmlText string, buttons ...[]Button) {
 	msg := tu.Message(tu.ID(chatID), htmlText)
 	msg.ParseMode = telego.ModeHTML
-	msg.ReplyMarkup = createInlineKeyboard(buttons)
+	keyboard := createInlineKeyboard(buttons)
+	if keyboard != nil {
+		msg.ReplyMarkup = createInlineKeyboard(buttons)
+	}
 	msg.ReplyParameters = &telego.ReplyParameters{
 		MessageID: msgID,
 	}
@@ -74,7 +90,10 @@ func ReplyMessageHTML(chatID int64, msgID int, htmlText string, buttons ...[]But
 func ReplyMessageMarkdown(chatID int64, msgID int, markdownText string, buttons ...[]Button) {
 	msg := tu.Message(tu.ID(chatID), markdownText)
 	msg.ParseMode = telego.ModeMarkdownV2
-	msg.ReplyMarkup = createInlineKeyboard(buttons)
+	keyboard := createInlineKeyboard(buttons)
+	if keyboard != nil {
+		msg.ReplyMarkup = createInlineKeyboard(buttons)
+	}
 	msg.ReplyParameters = &telego.ReplyParameters{
 		MessageID: msgID,
 	}
