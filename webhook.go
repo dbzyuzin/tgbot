@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 
@@ -58,7 +57,7 @@ func StartWebhookServer(ctx context.Context, mux *http.ServeMux) error {
 	go func() {
 		<-ctx.Done()
 		if err := server.Shutdown(ctx); err != nil {
-			log.Println("Webhook server shutdown error:", err)
+			slog.Error("Webhook server shutdown error", "error", err)
 		}
 	}()
 

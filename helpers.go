@@ -2,10 +2,11 @@ package tgbot
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 )
 
 func myPanic(eng, ruFormat string, params ...any) {
 	fmt.Printf("\n\n"+ruFormat+"\n\n", params...)
-	log.Panicln(eng)
+	slog.Error(eng)
+	panic(eng)
 }

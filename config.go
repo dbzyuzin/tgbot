@@ -1,7 +1,8 @@
 package tgbot
 
 import (
-	"log"
+	"log/slog"
+	"os"
 	"strings"
 	"sync"
 
@@ -22,7 +23,8 @@ var (
 func cfg() config {
 	once.Do(func() {
 		if err := env.Parse(&cfgInstance); err != nil {
-			log.Panicf("Failed to parse environment variables: %v", err)
+			slog.Error("Failed to parse environment variables", "error", err)
+			os.Exit(1)
 		}
 		cfgInstance.AppURL = strings.TrimSuffix(cfgInstance.AppURL, "/")
 	})
