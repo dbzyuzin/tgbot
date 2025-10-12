@@ -3,6 +3,7 @@ package tgbot
 import (
 	"log"
 	"strings"
+	"sync"
 
 	"github.com/caarlos0/env/v10"
 )
@@ -13,13 +14,20 @@ type config struct {
 	ServerPort int    `env:"SERVER_PORT"`
 }
 
-var cfg config
+var (
+	cfgInstance config
+	once        sync.Once
+)
 
-func init() {
-	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("Failed to parse environment variables: %v", err)
-	}
-	cfg.AppURL = strings.TrimSuffix(cfg.AppURL, "/")
+func cfg() config {
+	once.Do(func() {
+		if err := env.Parse(&cfgInstance); err != nil {
+			log.Panicf("Failed to parse environment variables: %v", err)
+		}
+		cfgInstance.AppURL = strings.TrimSuffix(cfgInstance.AppURL, "/")
+	})
+
+	return cfgInstance
 }
 
 var handlers struct {

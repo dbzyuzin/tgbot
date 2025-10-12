@@ -22,7 +22,7 @@ func Start() {
 	defer cancel()
 
 	var err error
-	bot, err = telego.NewBot(cfg.BotToken)
+	bot, err = telego.NewBot(cfg().BotToken)
 	if err != nil {
 		myPanic(err.Error(), "Не удалось подключиться к телеграмм, проверь токен.")
 	}
@@ -35,7 +35,7 @@ func Start() {
 
 	var updates <-chan telego.Update
 
-	if cfg.AppURL != "" {
+	if cfg().AppURL != "" {
 		err = SetWebhook(ctx)
 		if err != nil && !errors.Is(err, ErrNoAppUrl) {
 			myPanic(err.Error(), "can't set webhook")

@@ -19,7 +19,7 @@ func SetWebhook(ctx context.Context) error {
 		return errors.New("bot is nil")
 	}
 
-	if cfg.AppURL == "" {
+	if cfg().AppURL == "" {
 		return ErrNoAppUrl
 	}
 
@@ -28,7 +28,7 @@ func SetWebhook(ctx context.Context) error {
 		return fmt.Errorf("get webhook error: %w", err)
 	}
 
-	url := cfg.AppURL + webhookPath
+	url := cfg().AppURL + webhookPath
 
 	if wh.URL == url {
 		slog.Info("webhook already set", "url", url)
@@ -51,7 +51,7 @@ func SetWebhook(ctx context.Context) error {
 
 func StartWebhookServer(ctx context.Context, mux *http.ServeMux) error {
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.ServerPort),
+		Addr:    fmt.Sprintf(":%d", cfg().ServerPort),
 		Handler: mux,
 	}
 
