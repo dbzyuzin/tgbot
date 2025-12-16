@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/mymmrac/telego"
 )
@@ -56,16 +57,23 @@ func StartWebhookServer(ctx context.Context, mux *http.ServeMux) error {
 
 	go func() {
 		<-ctx.Done()
-		if err := server.Shutdown(ctx); err != nil {
-			slog.Error("Webhook server shutdown error", "error", err)
+		slog.Info("shutting down server...")
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			slog.Error("server shutdown error", "error", err)
+		} else {
+			slog.Info("server stopped")
 		}
 	}()
 
-	slog.Info("starting webhook server", "address", server.Addr)
+	slog.Info("starting server", "address", server.Addr)
 
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		slog.Error("webhook server error", "error", err)
+		slog.Error("server error", "error", err)
 		return err
 	}
 

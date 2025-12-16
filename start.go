@@ -34,23 +34,18 @@ func Start() {
 	}
 
 	var updates <-chan telego.Update
+	needServer := cfg().AppURL != "" || webappEnabled || apiHandler != nil
+	var mux *http.ServeMux
 
-	if cfg().AppURL != "" {
-		err = SetWebhook(ctx)
-		if err != nil && !errors.Is(err, ErrNoAppUrl) {
-			myPanic(err.Error(), "can't set webhook")
-			return
-		}
-		mux := http.NewServeMux()
-		updates, err = bot.UpdatesViaWebhook(ctx,
-			telego.WebhookHTTPServeMux(mux, webhookPath, bot.SecretToken()))
-		if err != nil {
-			myPanic(err.Error(), "can't start webhook updates")
-		}
-
+	if needServer {
+		mux = http.NewServeMux()
 		mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("OK"))
 		})
+
+		if apiHandler != nil {
+			mux.Handle("/api/", http.StripPrefix("/api", apiHandler))
+		}
 
 		if webappEnabled {
 			subFS, err := fs.Sub(webappFS, webappRoot)
@@ -59,13 +54,19 @@ func Start() {
 			}
 			mux.Handle("/", http.FileServer(http.FS(subFS)))
 		}
+	}
 
-		go func() {
-			err = StartWebhookServer(ctx, mux)
-			if err != nil {
-				myPanic(err.Error(), "can't start webhook server")
-			}
-		}()
+	if cfg().AppURL != "" {
+		err = SetWebhook(ctx)
+		if err != nil && !errors.Is(err, ErrNoAppUrl) {
+			myPanic(err.Error(), "can't set webhook")
+			return
+		}
+		updates, err = bot.UpdatesViaWebhook(ctx,
+			telego.WebhookHTTPServeMux(mux, webhookPath, bot.SecretToken()))
+		if err != nil {
+			myPanic(err.Error(), "can't start webhook updates")
+		}
 	} else {
 		info, err := bot.GetWebhookInfo(ctx)
 		if err != nil {
@@ -86,6 +87,15 @@ func Start() {
 		if err != nil {
 			myPanic(err.Error(), "can't start long polling updates")
 		}
+	}
+
+	if needServer {
+		go func() {
+			err := StartWebhookServer(ctx, mux)
+			if err != nil {
+				myPanic(err.Error(), "can't start server")
+			}
+		}()
 	}
 
 	slog.Info("bot started", "name", me.Username)

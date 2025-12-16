@@ -15,7 +15,7 @@ type config struct {
 	BotToken   string `env:"BOT_TOKEN,required"`
 	AppURL     string `env:"APP_URL"`
 	WebAppURL  string `env:"WEB_APP_URL"`
-	ServerPort int    `env:"SERVER_PORT"`
+	ServerPort int    `env:"SERVER_PORT" envDefault:"8080"`
 }
 
 var (

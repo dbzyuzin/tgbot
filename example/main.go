@@ -17,8 +17,10 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
+	"net/http"
 
 	"github.com/dbzyuzin/tgbot"
+	"github.com/gin-gonic/gin"
 )
 
 //go:embed webapp
@@ -26,6 +28,15 @@ var webappFiles embed.FS
 
 func main() {
 	tgbot.WebApp(webappFiles, "webapp")
+
+	gin.SetMode(gin.ReleaseMode)
+	g := gin.New()
+	g.Use(gin.Recovery())
+
+	g.GET("/ping", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "pong")
+	})
+	tgbot.APIHandler(g)
 
 	tgbot.MessageHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
 		chat.SendText("🎲", []tgbot.Button{{Text: "Окей", Data: "okay-data-id"}},
