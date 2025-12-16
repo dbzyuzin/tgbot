@@ -14,6 +14,7 @@ import (
 type config struct {
 	BotToken   string `env:"BOT_TOKEN,required"`
 	AppURL     string `env:"APP_URL"`
+	WebAppURL  string `env:"WEB_APP_URL"`
 	ServerPort int    `env:"SERVER_PORT"`
 }
 
@@ -29,10 +30,19 @@ func cfg() config {
 			slog.Error("Failed to parse environment variables", "error", err)
 			os.Exit(1)
 		}
+
 		cfgInstance.AppURL = strings.TrimSuffix(cfgInstance.AppURL, "/")
+		cfgInstance.WebAppURL = strings.TrimSuffix(cfgInstance.WebAppURL, "/")
+		if cfgInstance.WebAppURL == "" {
+			cfgInstance.WebAppURL = cfgInstance.AppURL
+		}
 	})
 
 	return cfgInstance
+}
+
+func AppURL() string {
+	return cfg().AppURL
 }
 
 var handlers = struct {

@@ -31,6 +31,11 @@ type User struct {
 }
 
 type Button struct {
-	Text string
-	Data string
+	Text   string
+	Data   string
+	webApp bool
+}
+
+func WebAppButton(text string) Button {
+	return Button{Text: text, webApp: true}
 }

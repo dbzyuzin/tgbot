@@ -129,7 +129,14 @@ func createInlineKeyboard(buttons [][]Button) *telego.InlineKeyboardMarkup {
 	for _, row := range buttons {
 		r := make([]telego.InlineKeyboardButton, 0, len(row))
 		for _, btn := range row {
-			r = append(r, tu.InlineKeyboardButton(btn.Text).WithCallbackData(btn.Data))
+			if btn.webApp {
+				r = append(r, telego.InlineKeyboardButton{
+					Text:   btn.Text,
+					WebApp: &telego.WebAppInfo{URL: cfg().WebAppURL},
+				})
+			} else {
+				r = append(r, tu.InlineKeyboardButton(btn.Text).WithCallbackData(btn.Data))
+			}
 		}
 		markupTable = append(markupTable, r)
 	}
