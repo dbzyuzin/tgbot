@@ -3,6 +3,7 @@ package tgbot
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os/signal"
@@ -50,6 +51,14 @@ func Start() {
 		mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("OK"))
 		})
+
+		if webappEnabled {
+			subFS, err := fs.Sub(webappFS, webappRoot)
+			if err != nil {
+				myPanic(err.Error(), "can't get webapp subfolder")
+			}
+			mux.Handle("/", http.FileServer(http.FS(subFS)))
+		}
 
 		go func() {
 			err = StartWebhookServer(ctx, mux)

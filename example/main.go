@@ -2,13 +2,19 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"log/slog"
 
 	"github.com/dbzyuzin/tgbot"
 )
 
+//go:embed webapp
+var webappFiles embed.FS
+
 func main() {
+	tgbot.WebApp(webappFiles, "webapp")
+
 	tgbot.MessageHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
 		chat.SendText("🎲", []tgbot.Button{
 			{Text: "Окей", Data: "okay-data-id"},
