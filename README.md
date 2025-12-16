@@ -25,10 +25,10 @@ import (
 )
 
 func main() {
-	tgbot.RegisterHandler(func(msg tgbot.Message) {
-		tgbot.SendMessage(msg.ChatID, msg.Text)
+	tgbot.MessageHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
+		chat.SendText(msg.ChatID, msg.Text)
 	})
-
+	
 	tgbot.Start()
 }
 ```

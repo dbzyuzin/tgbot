@@ -3,7 +3,6 @@ package tgbot
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os/signal"
@@ -85,49 +84,13 @@ func Start() {
 	for update := range updates {
 		switch {
 		case update.Message != nil:
-			handleMessage(update)
+			handleMessage(ctx, update)
 		case update.CallbackQuery != nil && update.CallbackQuery.Message.IsAccessible():
-			handleCallback(update)
+			handleCallback(ctx, update)
 		default:
-			fmt.Println("unknown update")
+			slog.Warn("unknown update")
 		}
 	}
-}
-
-func handleMessage(update telego.Update) {
-	if len(handlers.messageHandlers) == 0 {
-		return
-	}
-
-	msg := mapMessage(update.Message)
-	for _, handler := range handlers.messageHandlers {
-		handler(msg)
-	}
-}
-
-func handleCallback(update telego.Update) {
-	if len(handlers.callbackHandlers) == 0 {
-		return
-	}
-
-	// todo: check how to get callback without a msg
-	msg, ok := update.CallbackQuery.Message.(*telego.Message)
-	if !ok {
-		return
-	}
-
-	callback := Callback{
-		Data:    update.CallbackQuery.Data,
-		Message: mapMessage(msg),
-	}
-
-	for _, handler := range handlers.callbackHandlers {
-		handler(callback)
-	}
-
-	_ = bot.AnswerCallbackQuery(context.Background(), &telego.AnswerCallbackQueryParams{
-		CallbackQueryID: update.CallbackQuery.ID,
-	})
 }
 
 func mapMessage(msg *telego.Message) Message {
