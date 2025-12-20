@@ -50,6 +50,7 @@ var handlers = struct {
 	commandHandlers  map[string]func(context.Context, Chat, Message)
 	messageHandlers  []func(context.Context, Chat, Message)
 	callbackHandlers []func(context.Context, Chat, Callback)
+	editHandlers     []func(context.Context, Chat, Message)
 }{
 	commandHandlers: make(map[string]func(context.Context, Chat, Message)),
 }
@@ -95,4 +96,12 @@ func CallbackHandler(handler func(context.Context, Chat, Callback)) {
 	}
 
 	handlers.callbackHandlers = append(handlers.callbackHandlers, handler)
+}
+
+func EditHandler(handler func(context.Context, Chat, Message)) {
+	if handler == nil {
+		myPanic("nil handler", "Передан nil в функцию EditHandler")
+	}
+
+	handlers.editHandlers = append(handlers.editHandlers, handler)
 }

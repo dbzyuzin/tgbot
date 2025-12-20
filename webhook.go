@@ -38,7 +38,7 @@ func SetWebhook(ctx context.Context) error {
 	err = bot.SetWebhook(ctx, &telego.SetWebhookParams{
 		URL:            url,
 		SecretToken:    bot.SecretToken(),
-		AllowedUpdates: allowedUpdates,
+		AllowedUpdates: allowedUpdates(),
 	})
 	if err != nil {
 		return fmt.Errorf("set webhook error: %w", err)

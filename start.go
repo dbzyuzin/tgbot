@@ -12,9 +12,27 @@ import (
 	"github.com/mymmrac/telego"
 )
 
-var allowedUpdates = []string{"message", "callback_query"}
-
 var bot *telego.Bot
+
+// avaliable updates https://core.telegram.org/bots/api#update
+func allowedUpdates() []string {
+	updates := []string{}
+	if len(handlers.messageHandlers) > 0 || len(handlers.callbackHandlers) > 0 {
+		updates = append(updates, "message")
+	}
+
+	if len(handlers.callbackHandlers) > 0 {
+		updates = append(updates, "callback_query")
+	}
+
+	if len(handlers.editHandlers) > 0 {
+		updates = append(updates, "edited_message")
+	}
+
+	// todo: add `message_reaction`
+
+	return updates
+}
 
 // Start запускает бота и замораживает поток до ручной остановки
 func Start() {
@@ -82,7 +100,7 @@ func Start() {
 		}
 
 		updates, err = bot.UpdatesViaLongPolling(ctx, &telego.GetUpdatesParams{
-			AllowedUpdates: allowedUpdates,
+			AllowedUpdates: allowedUpdates(),
 		})
 		if err != nil {
 			myPanic(err.Error(), "can't start long polling updates")
@@ -104,6 +122,8 @@ func Start() {
 		switch {
 		case update.Message != nil:
 			handleMessage(ctx, update)
+		case update.EditedMessage != nil:
+			handleEditedMessage(ctx, update)
 		case update.CallbackQuery != nil && update.CallbackQuery.Message.IsAccessible():
 			handleCallback(ctx, update)
 		default:

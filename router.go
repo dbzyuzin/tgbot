@@ -40,6 +40,19 @@ func handleMessage(ctx context.Context, update telego.Update) {
 	}
 }
 
+func handleEditedMessage(ctx context.Context, update telego.Update) {
+	if len(handlers.editHandlers) == 0 {
+		return
+	}
+
+	ch := chat{update.EditedMessage.Chat.ID}
+
+	msg := mapMessage(update.EditedMessage)
+	for _, handler := range handlers.editHandlers {
+		handler(ctx, &ch, msg)
+	}
+}
+
 func handleCallback(ctx context.Context, update telego.Update) {
 	if len(handlers.callbackHandlers) == 0 {
 		return

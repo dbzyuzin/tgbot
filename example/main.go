@@ -58,5 +58,9 @@ func main() {
 		slog.Info("user used unknown command", "text", m.Text)
 	})
 
+	tgbot.EditHandler(func(ctx context.Context, c tgbot.Chat, m tgbot.Message) {
+		c.SendText("updated: " + m.Text)
+	})
+
 	tgbot.Start()
 }
