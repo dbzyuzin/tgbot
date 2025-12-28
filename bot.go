@@ -42,15 +42,39 @@ func WithHTML() SendOption {
 	}
 }
 
+func WithHTMLIf(condition bool) SendOption {
+	return func(o *sendOptions) {
+		if condition {
+			o.parseMode = telego.ModeHTML
+		}
+	}
+}
+
 func WithMarkdown() SendOption {
 	return func(o *sendOptions) {
 		o.parseMode = telego.ModeMarkdownV2
 	}
 }
 
+func WithMarkdownIf(condition bool) SendOption {
+	return func(o *sendOptions) {
+		if condition {
+			o.parseMode = telego.ModeMarkdownV2
+		}
+	}
+}
+
 func WithSilent() SendOption {
 	return func(o *sendOptions) {
 		o.silent = true
+	}
+}
+
+func WithSilentIf(condition bool) SendOption {
+	return func(o *sendOptions) {
+		if condition {
+			o.silent = true
+		}
 	}
 }
 
