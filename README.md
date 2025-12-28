@@ -36,7 +36,7 @@ import (
 
 func main() {
 	tgbot.MessageHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
-		chat.SendText(msg.Text)
+		chat.Send(msg.Text)
 	})
 
 	tgbot.Start()
@@ -47,11 +47,11 @@ func main() {
 
 ```go
 tgbot.CommandHandler("start", func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
-	chat.SendText("Привет!")
+	chat.Send("Привет!")
 })
 
 tgbot.UnknownCommandHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
-	chat.SendText("Неизвестная команда")
+	chat.Send("Неизвестная команда")
 })
 ```
 
@@ -59,15 +59,15 @@ tgbot.UnknownCommandHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot
 
 ```go
 tgbot.MessageHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
-	chat.SendText("Выбери:", []tgbot.Button{
-		{Text: "Да", Data: "yes"},
-		{Text: "Нет", Data: "no"},
-	})
+	chat.Send("Выбери:", tgbot.WithButtons(
+		tgbot.Button{Text: "Да", Data: "yes"},
+		tgbot.Button{Text: "Нет", Data: "no"},
+	))
 })
 
 tgbot.CallbackHandler(func(ctx context.Context, chat tgbot.Chat, cb tgbot.Callback) {
 	if cb.Data == "yes" {
-		chat.SendText("Отлично!")
+		chat.Send("Отлично!")
 	}
 })
 ```
@@ -75,12 +75,12 @@ tgbot.CallbackHandler(func(ctx context.Context, chat tgbot.Chat, cb tgbot.Callba
 ## Форматирование
 
 ```go
-chat.SendHTML("<b>Жирный</b> и <i>курсив</i>")
-chat.SendMarkdown("*Жирный* и _курсив_")
+chat.Send("<b>Жирный</b> и <i>курсив</i>", tgbot.WithHTML())
+chat.Send("*Жирный* и _курсив_", tgbot.WithMarkdown())
 
 // Хелперы
-chat.SendHTML(tgbot.Bold("важно") + " текст")
-chat.SendHTML(tgbot.Link("ссылка", "https://example.com"))
+chat.Send(tgbot.Bold("важно")+" текст", tgbot.WithHTML())
+chat.Send(tgbot.Link("ссылка", "https://example.com"), tgbot.WithHTML())
 ```
 
 ## Mini App
@@ -93,7 +93,7 @@ func main() {
 	tgbot.WebApp(webappFiles, "webapp")
 
 	tgbot.MessageHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
-		chat.SendText("Открой приложение:", []tgbot.Button{tgbot.WebAppButton("Open")})
+		chat.Send("Открой приложение:", tgbot.WithWebAppButton("Open"))
 	})
 
 	tgbot.Start()

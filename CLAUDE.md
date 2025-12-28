@@ -44,9 +44,17 @@ Go-библиотека для создания Telegram ботов. Обёрт�
 - `EditHandler(handler)` - редактирование сообщений
 
 Отправка через `Chat` интерфейс или глобальные функции:
-- `SendText/SendHTML/SendMarkdown` - отправка
-- `ReplyText/ReplyHTML/ReplyMarkdown` - ответ на сообщение
+- `Send(text, opts...)` / `SendCtx(ctx, text, opts...)` - отправка с опциями
 - `DeleteMessage`, `UpdateKeyboard`
+
+Опции для Send:
+- `WithButtons(buttons ...Button)` - одна строка кнопок
+- `WithKeyboard(rows ...[]Button)` - несколько строк кнопок
+- `WithReply(msgID)` - ответ на сообщение
+- `WithHTML()` - HTML форматирование
+- `WithMarkdown()` - Markdown форматирование
+- `WithoutNotification()` - без уведомления
+- `WithWebAppButton(text)` - кнопка Mini App
 
 ## Сборка
 
