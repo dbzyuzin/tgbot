@@ -2,116 +2,113 @@ package tgbot
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 )
 
-func SendMessage(chatID int64, text string, buttons ...[]Button) {
+type SendOption func(*sendOptions)
+
+type sendOptions struct {
+	buttons   [][]Button
+	replyTo   int
+	parseMode string
+	silent    bool
+}
+
+func WithButtons(buttons ...Button) SendOption {
+	return func(o *sendOptions) {
+		o.buttons = append(o.buttons, buttons)
+	}
+}
+
+func WithKeyboard(rows ...[]Button) SendOption {
+	return func(o *sendOptions) {
+		o.buttons = append(o.buttons, rows...)
+	}
+}
+
+func WithReply(msgID int) SendOption {
+	return func(o *sendOptions) {
+		o.replyTo = msgID
+	}
+}
+
+func WithHTML() SendOption {
+	return func(o *sendOptions) {
+		o.parseMode = telego.ModeHTML
+	}
+}
+
+func WithMarkdown() SendOption {
+	return func(o *sendOptions) {
+		o.parseMode = telego.ModeMarkdownV2
+	}
+}
+
+func WithSilent() SendOption {
+	return func(o *sendOptions) {
+		o.silent = true
+	}
+}
+
+func WithWebAppButton(text string) SendOption {
+	return func(o *sendOptions) {
+		o.buttons = append(o.buttons, []Button{{Text: text, webApp: true}})
+	}
+}
+
+func Send(chatID int64, text string, opts ...SendOption) error {
+	return SendCtx(context.Background(), chatID, text, opts...)
+}
+
+func SendCtx(ctx context.Context, chatID int64, text string, opts ...SendOption) error {
+	var o sendOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+
 	msg := tu.Message(tu.ID(chatID), text)
 
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
+	if o.parseMode != "" {
+		msg.ParseMode = o.parseMode
 	}
 
-	_, err := bot.SendMessage(context.Background(), msg)
-	if err != nil {
-		slog.Error("can't send the message", "chat", chatID, "err", err, "full_msg", msg)
+	if keyboard := createInlineKeyboard(o.buttons); keyboard != nil {
+		msg.ReplyMarkup = keyboard
 	}
+
+	if o.replyTo != 0 {
+		msg.ReplyParameters = &telego.ReplyParameters{
+			MessageID: o.replyTo,
+		}
+	}
+
+	if o.silent {
+		msg.DisableNotification = true
+	}
+
+	_, err := bot.SendMessage(ctx, msg)
+	if err != nil {
+		slog.Error("can't send the message", "chat", chatID, "err", err)
+		return fmt.Errorf("can't send the message: %w", err)
+	}
+
+	return nil
 }
 
-// SendMessageHTML отправляет сообщение с HTML форматированием
-func SendMessageHTML(chatID int64, htmlText string, buttons ...[]Button) {
-	msg := tu.Message(tu.ID(chatID), htmlText)
-	msg.ParseMode = telego.ModeHTML
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
-	}
-
-	_, err := bot.SendMessage(context.Background(), msg)
-	if err != nil {
-		slog.Error("can't send HTML message", "chat", chatID, "err", err, "full_msg", msg)
-	}
-}
-
-// SendMessageMarkdown отправляет сообщение с Markdown форматированием
-func SendMessageMarkdown(chatID int64, markdownText string, buttons ...[]Button) {
-	msg := tu.Message(tu.ID(chatID), markdownText)
-	msg.ParseMode = telego.ModeMarkdownV2
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
-	}
-
-	_, err := bot.SendMessage(context.Background(), msg)
-	if err != nil {
-		slog.Error("can't send Markdown message", "chat", chatID, "err", err, "full_msg", msg)
-	}
-}
-
-func ReplyMessage(chatID int64, msgID int, text string, buttons ...[]Button) {
-	msg := tu.Message(tu.ID(chatID), text)
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
-	}
-
-	msg.ReplyParameters = &telego.ReplyParameters{
-		MessageID: msgID,
-	}
-	_, err := bot.SendMessage(context.Background(), msg)
-	if err != nil {
-		slog.Error("can't send the message", "chat", chatID, "err", err, "full_msg", msg)
-	}
-}
-
-// ReplyMessageHTML отвечает на сообщение с HTML форматированием
-func ReplyMessageHTML(chatID int64, msgID int, htmlText string, buttons ...[]Button) {
-	msg := tu.Message(tu.ID(chatID), htmlText)
-	msg.ParseMode = telego.ModeHTML
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
-	}
-	msg.ReplyParameters = &telego.ReplyParameters{
-		MessageID: msgID,
-	}
-
-	_, err := bot.SendMessage(context.Background(), msg)
-	if err != nil {
-		slog.Error("can't reply with HTML message", "chat", chatID, "err", err, "full_msg", msg)
-	}
-}
-
-// ReplyMessageMarkdown отвечает на сообщение с Markdown форматированием
-func ReplyMessageMarkdown(chatID int64, msgID int, markdownText string, buttons ...[]Button) {
-	msg := tu.Message(tu.ID(chatID), markdownText)
-	msg.ParseMode = telego.ModeMarkdownV2
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
-	}
-	msg.ReplyParameters = &telego.ReplyParameters{
-		MessageID: msgID,
-	}
-
-	_, err := bot.SendMessage(context.Background(), msg)
-	if err != nil {
-		slog.Error("can't reply with Markdown message", "chat", chatID, "err", err, "full_msg", msg)
-	}
-}
-
-func DeleteMessage(chatID int64, messageID int) {
+func DeleteMessage(chatID int64, messageID int) error {
 	err := bot.DeleteMessage(context.Background(), tu.Delete(tu.ID(chatID), messageID))
 	if err != nil {
 		slog.Error("can't delete the message", "chat", chatID, "msg_id", messageID, "err", err)
+		return fmt.Errorf("can't delete the message: %w", err)
 	}
+	return nil
 }
 
-func UpdateKeyboard(chatID int64, messageID int, buttons ...[]Button) {
+func UpdateKeyboard(chatID int64, messageID int, buttons ...[]Button) error {
 	keyboard := createInlineKeyboard(buttons)
 
 	_, err := bot.EditMessageReplyMarkup(context.Background(), &telego.EditMessageReplyMarkupParams{
@@ -121,7 +118,9 @@ func UpdateKeyboard(chatID int64, messageID int, buttons ...[]Button) {
 	})
 	if err != nil {
 		slog.Error("can't edit the keyboard", "chat", chatID, "msg_id", messageID, "err", err)
+		return fmt.Errorf("can't edit the keyboard: %w", err)
 	}
+	return nil
 }
 
 func createInlineKeyboard(buttons [][]Button) *telego.InlineKeyboardMarkup {
@@ -148,7 +147,6 @@ func createInlineKeyboard(buttons [][]Button) *telego.InlineKeyboardMarkup {
 	return nil
 }
 
-// HTML форматирование - вспомогательные функции
 func Bold(text string) string {
 	return "<b>" + text + "</b>"
 }
@@ -173,7 +171,6 @@ func Spoiler(text string) string {
 	return "<tg-spoiler>" + text + "</tg-spoiler>"
 }
 
-// Markdown форматирование - вспомогательные функции
 func BoldMD(text string) string {
 	return "*" + text + "*"
 }

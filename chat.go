@@ -13,19 +13,8 @@ type Chat interface {
 	ID() int64
 	Bot() *telego.Bot
 
-	SendText(text string, buttons ...[]Button) error
-	SendTextCtx(ctx context.Context, text string, buttons ...[]Button) error
-	SendHTML(htmlText string, buttons ...[]Button) error
-	SendHTMLCtx(ctx context.Context, htmlText string, buttons ...[]Button) error
-	SendMarkdown(markdownText string, buttons ...[]Button) error
-	SendMarkdownCtx(ctx context.Context, markdownText string, buttons ...[]Button) error
-
-	ReplyText(msgID int, text string, buttons ...[]Button) error
-	ReplyTextCtx(ctx context.Context, msgID int, text string, buttons ...[]Button) error
-	ReplyHTML(msgID int, htmlText string, buttons ...[]Button) error
-	ReplyHTMLCtx(ctx context.Context, msgID int, htmlText string, buttons ...[]Button) error
-	ReplyMarkdown(msgID int, markdownText string, buttons ...[]Button) error
-	ReplyMarkdownCtx(ctx context.Context, msgID int, markdownText string, buttons ...[]Button) error
+	Send(text string, opts ...SendOption) error
+	SendCtx(ctx context.Context, text string, opts ...SendOption) error
 
 	DeleteMessage(messageID int) error
 	DeleteMessageCtx(ctx context.Context, messageID int) error
@@ -45,134 +34,42 @@ func (ch *chat) Bot() *telego.Bot {
 	return bot
 }
 
-func (ch *chat) SendText(text string, buttons ...[]Button) error {
-	return ch.SendTextCtx(context.Background(), text, buttons...)
+func (ch *chat) Send(text string, opts ...SendOption) error {
+	return ch.SendCtx(context.Background(), text, opts...)
 }
 
-func (ch *chat) SendTextCtx(ctx context.Context, text string, buttons ...[]Button) error {
-	msg := tu.Message(tu.ID(ch.id), text)
-
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
+func (ch *chat) SendCtx(ctx context.Context, text string, opts ...SendOption) error {
+	var o sendOptions
+	for _, opt := range opts {
+		opt(&o)
 	}
 
-	_, err := bot.SendMessage(context.Background(), msg)
+	msg := tu.Message(tu.ID(ch.id), text)
+
+	if o.parseMode != "" {
+		msg.ParseMode = o.parseMode
+	}
+
+	if keyboard := createInlineKeyboard(o.buttons); keyboard != nil {
+		msg.ReplyMarkup = keyboard
+	}
+
+	if o.replyTo != 0 {
+		msg.ReplyParameters = &telego.ReplyParameters{
+			MessageID: o.replyTo,
+		}
+	}
+
+	if o.silent {
+		msg.DisableNotification = true
+	}
+
+	_, err := bot.SendMessage(ctx, msg)
 	if err != nil {
-		slog.Error("can't send the message", "chat", ch.id, "err", err, "full_msg", msg)
+		slog.Error("can't send the message", "chat", ch.id, "err", err)
 		return fmt.Errorf("can't send the message: %w", err)
 	}
 
-	return nil
-}
-
-func (ch *chat) SendHTML(htmlText string, buttons ...[]Button) error {
-	return ch.SendHTMLCtx(context.Background(), htmlText, buttons...)
-}
-
-func (ch *chat) SendHTMLCtx(ctx context.Context, htmlText string, buttons ...[]Button) error {
-	msg := tu.Message(tu.ID(ch.id), htmlText)
-	msg.ParseMode = telego.ModeHTML
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
-	}
-
-	_, err := bot.SendMessage(ctx, msg)
-	if err != nil {
-		slog.Error("can't send HTML message", "chat", ch.id, "err", err, "full_msg", msg)
-		return fmt.Errorf("can't send HTML message: %w", err)
-	}
-
-	return nil
-}
-
-func (ch *chat) SendMarkdown(markdownText string, buttons ...[]Button) error {
-	return ch.SendMarkdownCtx(context.Background(), markdownText, buttons...)
-}
-
-func (ch *chat) SendMarkdownCtx(ctx context.Context, markdownText string, buttons ...[]Button) error {
-	msg := tu.Message(tu.ID(ch.id), markdownText)
-	msg.ParseMode = telego.ModeMarkdownV2
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = createInlineKeyboard(buttons)
-	}
-
-	_, err := bot.SendMessage(ctx, msg)
-	if err != nil {
-		slog.Error("can't send Markdown message", "chat", ch.id, "err", err, "full_msg", msg)
-		return fmt.Errorf("can't send Markdown message: %w", err)
-	}
-
-	return nil
-}
-
-func (ch *chat) ReplyText(msgID int, text string, buttons ...[]Button) error {
-	return ch.ReplyTextCtx(context.Background(), msgID, text, buttons...)
-}
-
-func (ch *chat) ReplyTextCtx(ctx context.Context, msgID int, text string, buttons ...[]Button) error {
-	msg := tu.Message(tu.ID(ch.id), text)
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = keyboard
-	}
-
-	msg.ReplyParameters = &telego.ReplyParameters{
-		MessageID: msgID,
-	}
-	_, err := bot.SendMessage(ctx, msg)
-	if err != nil {
-		slog.Error("can't send the message", "chat", ch.id, "err", err, "full_msg", msg)
-		return fmt.Errorf("can't send the message: %w", err)
-	}
-	return nil
-}
-
-func (ch *chat) ReplyHTML(msgID int, htmlText string, buttons ...[]Button) error {
-	return ch.ReplyHTMLCtx(context.Background(), msgID, htmlText, buttons...)
-}
-
-func (ch *chat) ReplyHTMLCtx(ctx context.Context, msgID int, htmlText string, buttons ...[]Button) error {
-	msg := tu.Message(tu.ID(ch.id), htmlText)
-	msg.ParseMode = telego.ModeHTML
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = keyboard
-	}
-	msg.ReplyParameters = &telego.ReplyParameters{
-		MessageID: msgID,
-	}
-
-	_, err := bot.SendMessage(ctx, msg)
-	if err != nil {
-		slog.Error("can't reply with HTML message", "chat", ch.id, "err", err, "full_msg", msg)
-		return fmt.Errorf("can't reply with HTML message: %w", err)
-	}
-	return nil
-}
-
-func (ch *chat) ReplyMarkdown(msgID int, markdownText string, buttons ...[]Button) error {
-	return ch.ReplyMarkdownCtx(context.Background(), msgID, markdownText, buttons...)
-}
-
-func (ch *chat) ReplyMarkdownCtx(ctx context.Context, msgID int, markdownText string, buttons ...[]Button) error {
-	msg := tu.Message(tu.ID(ch.id), markdownText)
-	msg.ParseMode = telego.ModeMarkdownV2
-	keyboard := createInlineKeyboard(buttons)
-	if keyboard != nil {
-		msg.ReplyMarkup = keyboard
-	}
-	msg.ReplyParameters = &telego.ReplyParameters{
-		MessageID: msgID,
-	}
-
-	_, err := bot.SendMessage(ctx, msg)
-	if err != nil {
-		slog.Error("can't reply with Markdown message", "chat", ch.id, "err", err, "full_msg", msg)
-		return fmt.Errorf("can't reply with Markdown message: %w", err)
-	}
 	return nil
 }
 

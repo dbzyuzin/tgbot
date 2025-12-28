@@ -39,19 +39,20 @@ func main() {
 	tgbot.APIHandler(g)
 
 	tgbot.MessageHandler(func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
-		chat.SendText("🎲", []tgbot.Button{{Text: "Окей", Data: "okay-data-id"}},
+		chat.Send("🎲", tgbot.WithKeyboard(
+			[]tgbot.Button{{Text: "Окей", Data: "okay-data-id"}},
 			[]tgbot.Button{{Text: "Окей", Data: "okay-data-id2"}},
-			[]tgbot.Button{tgbot.WebAppButton("Open App")},
-		)
+		))
+		chat.Send("web appp", tgbot.WithWebAppButton("Open App"))
 	})
 
 	tgbot.CallbackHandler(func(ctx context.Context, chat tgbot.Chat, callback tgbot.Callback) {
 		fmt.Println(callback.Message)
-		tgbot.SendMessage(callback.Message.ChatID, "Кнопка нажата: "+callback.Data)
+		tgbot.Send(callback.Message.ChatID, "Кнопка нажата: "+callback.Data)
 	})
 
 	tgbot.CommandHandler("hello", func(ctx context.Context, chat tgbot.Chat, msg tgbot.Message) {
-		chat.SendText("Привет!")
+		chat.Send("Привет!", tgbot.WithSilent(), tgbot.WithReply(msg.ID))
 	})
 
 	tgbot.UnknownCommandHandler(func(ctx context.Context, c tgbot.Chat, m tgbot.Message) {
@@ -59,7 +60,7 @@ func main() {
 	})
 
 	tgbot.EditHandler(func(ctx context.Context, c tgbot.Chat, m tgbot.Message) {
-		c.SendText("updated: " + m.Text)
+		c.Send("updated: " + m.Text)
 	})
 
 	tgbot.Start()
